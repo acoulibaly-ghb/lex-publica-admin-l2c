@@ -88,15 +88,16 @@ const QuizDisplay = ({ data }: { data: QuizQuestion[] }) => {
     );
 };
 
-const TextChat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-      { role: 'model', text: 'Bonjour ! Je suis l\'IA Lex Publica. Comment puis-je vous aider sur le cours de Droit Administratif aujourd\'hui ?', timestamp: new Date() }
-  ]);
+interface TextChatProps {
+    messages: Message[];
+    onMessagesUpdate: (messages: Message[]) => void;
+}
+
+const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const API_KEY = import.meta.env.VITE_API_KEY;
+  const API_KEY = process.env.API_KEY;
 
   // --- ACTIONS RAPIDES (PILLS) ---
   const quickActions = [
@@ -112,16 +113,33 @@ const TextChat: React.FC = () => {
     if (!API_KEY) return;
 
     const userMsg: Message = { role: 'user', text: text, timestamp: new Date() };
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    onMessagesUpdate(updatedMessages);
+    
     setInput('');
     setIsLoading(true);
 
     try {
       const ai = new GoogleGenAI({ apiKey: API_KEY });
+      
+      // CONSTRUCTION DE L'HISTORIQUE POUR L'API
+      // Astuce: Si un message précédent était un Quiz (JSON), on injecte le contenu du quiz en texte pour que l'IA s'en souvienne.
+      const historyForApi = updatedMessages.map(m => {
+          if (m.isQuiz && m.quizData) {
+              return { 
+                  role: m.role, 
+                  parts: [{ text: `[SYSTEM: L'IA a généré ce QCM: ${JSON.stringify(m.quizData)}]` }] 
+              };
+          }
+          return { role: m.role, parts: [{ text: m.text }] };
+      });
+
       const result = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: text }] }],
-        config: { systemInstruction: SYSTEM_INSTRUCTION }
+        contents: [
+            { role: 'user', parts: [{ text: SYSTEM_INSTRUCTION }] },
+            ...historyForApi
+        ]
       });
       
       const responseText = result.text || "";
@@ -136,9 +154,9 @@ const TextChat: React.FC = () => {
          } catch(e) {}
       }
 
-      setMessages(prev => [...prev, botMsg]);
+      onMessagesUpdate([...updatedMessages, botMsg]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "Erreur de connexion.", timestamp: new Date() }]);
+      onMessagesUpdate([...updatedMessages, { role: 'model', text: "Erreur de connexion.", timestamp: new Date() }]);
     } finally {
       setIsLoading(false);
     }
