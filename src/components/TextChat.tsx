@@ -198,8 +198,8 @@ const TextChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* INPUT CONTAINER - FIXED BOTTOM */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
+      {/* INPUT CONTAINER - FIXED BOTTOM (Raised to bottom-10) */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-4xl px-4 z-20">
         
         {/* Pills / Quick Actions */}
         {!isLoading && (
