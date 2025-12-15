@@ -1,0 +1,7 @@
+{
+  "name": "Juriste DIP / Coulibaly",
+  "description": "Une assistante juridique spécialisée en droit du Contentieux international, capable de répondre par texte et par voix.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
