@@ -135,7 +135,7 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
       });
 
       const result = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-preview-tts',
         contents: [
             { role: 'user', parts: [{ text: SYSTEM_INSTRUCTION }] },
             ...historyForApi
