@@ -96,7 +96,7 @@ const TextChat: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const API_KEY = process.env.API_KEY;
+  const API_KEY = import.meta.env.VITE_API_KEY;
 
   // --- ACTIONS RAPIDES (PILLS) ---
   const quickActions = [
