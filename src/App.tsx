@@ -1,31 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChatMode } from './types';
+import { ChatMode, ChatSession, Message } from './types';
 import TextChat from './components/TextChat';
 import VoiceChat from './components/VoiceChat';
 import HelpModal from './components/HelpModal';
 
-// Mock data for history
-const MOCK_SESSIONS = [
-  { id: 1, title: 'Service Public & PPP', time: '10:19' },
-  { id: 2, title: 'Clause Exorbitante', time: 'Hier' },
-  { id: 3, title: 'Arrêt Duvignères', time: 'Lun.' },
-];
+// Message d'accueil par défaut
+const WELCOME_MESSAGE: Message = { 
+    role: 'model', 
+    text: 'Bonjour ! Je suis l\'IA Lex Publica. Comment puis-je vous aider sur le cours de Droit Administratif aujourd\'hui ?', 
+    timestamp: new Date() 
+};
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<ChatMode>(ChatMode.TEXT);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   
-  // Sidebar states
+  // Gestion des Sessions
+  const [sessions, setSessions] = useState<ChatSession[]>([
+      { id: '1', title: 'Nouvelle discussion', messages: [WELCOME_MESSAGE], lastModified: new Date() }
+  ]);
+  const [currentSessionId, setCurrentSessionId] = useState<string>('1');
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
-  const [sessions, setSessions] = useState(MOCK_SESSIONS);
 
   // Renaming states
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [tempTitle, setTempTitle] = useState("");
 
-  // Appliquer la classe 'dark' au body ou au wrapper principal
+  // Appliquer la classe 'dark'
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
@@ -34,12 +37,39 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  const deleteSession = (e: React.MouseEvent, id: number) => {
-    e.stopPropagation();
-    setSessions(prev => prev.filter(s => s.id !== id));
+  // --- Session Logic ---
+
+  const createNewSession = () => {
+      const newId = Date.now().toString();
+      const newSession: ChatSession = {
+          id: newId,
+          title: 'Nouvelle discussion',
+          messages: [{ ...WELCOME_MESSAGE, timestamp: new Date() }],
+          lastModified: new Date()
+      };
+      setSessions(prev => [newSession, ...prev]);
+      setCurrentSessionId(newId);
+      setMode(ChatMode.TEXT);
   };
 
-  const startEditing = (e: React.MouseEvent, session: { id: number, title: string }) => {
+  const deleteSession = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const newSessions = sessions.filter(s => s.id !== id);
+    setSessions(newSessions);
+    // Si on supprime la session active, on bascule sur la première dispo ou on en crée une
+    if (id === currentSessionId) {
+        if (newSessions.length > 0) {
+            setCurrentSessionId(newSessions[0].id);
+        } else {
+            // Plus de session, on en recrée une propre
+            const newId = Date.now().toString();
+            setSessions([{ id: newId, title: 'Nouvelle discussion', messages: [{...WELCOME_MESSAGE}], lastModified: new Date() }]);
+            setCurrentSessionId(newId);
+        }
+    }
+  };
+
+  const startEditing = (e: React.MouseEvent, session: ChatSession) => {
     e.stopPropagation();
     setEditingId(session.id);
     setTempTitle(session.title);
@@ -53,22 +83,44 @@ const App: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      saveTitle();
-    } else if (e.key === 'Escape') {
-      setEditingId(null);
-    }
+    if (e.key === 'Enter') saveTitle();
+    else if (e.key === 'Escape') setEditingId(null);
   };
+
+  const selectSession = (id: string) => {
+      setCurrentSessionId(id);
+      setMode(ChatMode.TEXT);
+  };
+
+  // Mise à jour des messages depuis le composant TextChat
+  const updateCurrentSessionMessages = (newMessages: Message[]) => {
+      setSessions(prev => prev.map(s => {
+          if (s.id === currentSessionId) {
+              // Auto-rename sur le premier message utilisateur si le titre est par défaut
+              let newTitle = s.title;
+              if (s.messages.length === 1 && newMessages.length > 1 && s.title === 'Nouvelle discussion') {
+                  const firstUserMsg = newMessages.find(m => m.role === 'user');
+                  if (firstUserMsg) {
+                      newTitle = firstUserMsg.text.slice(0, 30) + (firstUserMsg.text.length > 30 ? '...' : '');
+                  }
+              }
+              return { ...s, messages: newMessages, title: newTitle, lastModified: new Date() };
+          }
+          return s;
+      }));
+  };
+
+  // Récupération de la session active
+  const currentSession = sessions.find(s => s.id === currentSessionId) || sessions[0];
 
   return (
     <div className={`h-screen w-screen flex overflow-hidden font-sans transition-colors duration-300 ${darkMode ? 'dark bg-[#0B1120]' : 'bg-[#F3F4F6]'}`}>
       
-      {/* Help Modal */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
       {/* SIDEBAR */}
       <aside className="w-72 bg-[#0F172A] text-slate-300 flex flex-col flex-shrink-0 transition-all duration-300 border-r border-slate-800 z-20">
-        {/* Logo Area */}
+        {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-800 bg-[#0F172A]">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-900/50">
@@ -81,11 +133,10 @@ const App: React.FC = () => {
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6 custom-scrollbar">
             
-            {/* Espace Public / Navigation Principale */}
+            {/* Menu Principal */}
             <div>
                 <h3 className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Mode de communication</h3>
                 
-                {/* Mode Oral Button */}
                 <button 
                     onClick={() => setMode(ChatMode.VOICE)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 mb-4 rounded-lg text-sm font-medium transition-all duration-200 group ${
@@ -98,7 +149,6 @@ const App: React.FC = () => {
                     Mode Oral (Live)
                 </button>
 
-                {/* Historique Header Collapsible */}
                 <div className="flex items-center justify-between px-2 mb-2 group cursor-pointer" onClick={() => setIsHistoryOpen(!isHistoryOpen)}>
                     <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider group-hover:text-slate-400 transition-colors">Discussions</h3>
                     <button className={`text-slate-600 hover:text-slate-400 transition-transform duration-200 ${isHistoryOpen ? 'rotate-90' : ''}`}>
@@ -106,31 +156,28 @@ const App: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Historique List */}
                 <div className={`space-y-1 overflow-hidden transition-all duration-300 ${isHistoryOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                     
-                    {/* New Chat Button */}
                     <button 
-                        onClick={() => setMode(ChatMode.TEXT)}
+                        onClick={createNewSession}
                         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all border border-dashed border-slate-700 hover:border-slate-500 hover:bg-slate-800/30 text-slate-400 hover:text-white mb-2`}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                         Nouvelle discussion
                     </button>
 
-                    {/* Session Items */}
                     {sessions.map((session) => (
                         <div 
                             key={session.id}
-                            onClick={() => setMode(ChatMode.TEXT)}
+                            onClick={() => selectSession(session.id)}
                             className={`group w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                                mode === ChatMode.TEXT && editingId !== session.id // Ideally check active session ID
-                                ? 'bg-slate-800 text-white' 
+                                mode === ChatMode.TEXT && currentSessionId === session.id && editingId !== session.id
+                                ? 'bg-slate-800 text-white shadow-lg shadow-black/20' 
                                 : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200'
                             }`}
                         >
                             <div className="flex items-center gap-3 overflow-hidden flex-1">
-                                <svg className="w-4 h-4 flex-shrink-0 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                                <svg className={`w-4 h-4 flex-shrink-0 ${currentSessionId === session.id ? 'text-blue-500' : 'opacity-50'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
                                 
                                 {editingId === session.id ? (
                                     <input 
@@ -148,23 +195,12 @@ const App: React.FC = () => {
                                 )}
                             </div>
                             
-                            {/* Actions (Visible on Hover) */}
                             {editingId !== session.id && (
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                     {/* Edit Button */}
-                                     <button 
-                                        onClick={(e) => startEditing(e, session)}
-                                        className="p-1 hover:bg-slate-700 text-slate-500 hover:text-white rounded transition-colors"
-                                        title="Renommer"
-                                     >
+                                     <button onClick={(e) => startEditing(e, session)} className="p-1 hover:bg-slate-700 text-slate-500 hover:text-white rounded transition-colors" title="Renommer">
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                      </button>
-                                     {/* Delete Button */}
-                                     <button 
-                                        onClick={(e) => deleteSession(e, session.id)}
-                                        className="p-1 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded transition-colors"
-                                        title="Supprimer"
-                                     >
+                                     <button onClick={(e) => deleteSession(e, session.id)} className="p-1 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded transition-colors" title="Supprimer">
                                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                      </button>
                                 </div>
@@ -174,7 +210,6 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* Section 2 */}
             <div className="pt-4 border-t border-slate-800/50">
                 <h3 className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Espace Professeur</h3>
                 <nav className="space-y-1">
@@ -184,13 +219,10 @@ const App: React.FC = () => {
                     </button>
                 </nav>
             </div>
-
         </div>
 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-800 bg-[#0B1120]">
-            
-            {/* Dark Mode Toggle */}
             <button 
                 onClick={() => setDarkMode(!darkMode)}
                 className="flex items-center gap-3 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/50 p-2 rounded-lg transition-all mb-6 w-full group"
@@ -207,20 +239,14 @@ const App: React.FC = () => {
                     </>
                 )}
             </button>
-            
             <div className="space-y-4">
                 <div className="text-xs text-slate-500 font-medium space-y-1">
                     <p className="text-slate-400 font-semibold">Université Toulouse Capitole</p>
                     <p>Année universitaire 2025-2026</p>
                 </div>
-                
                 <div className="h-px bg-slate-800"></div>
-
                 <div className="text-[11px] text-slate-600 space-y-1.5">
-                    <p className="flex items-center gap-1.5">
-                        <svg className="w-3 h-3 text-indigo-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                        Propulsé par Google Gemini 2.5
-                    </p>
+                    <p className="flex items-center gap-1.5"><svg className="w-3 h-3 text-indigo-500" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>Propulsé par Google Gemini 2.5</p>
                     <p>Design by A. Coulibaly</p>
                     <p className="text-slate-700 italic mt-2">L'IA peut faire des erreurs.</p>
                 </div>
@@ -230,22 +256,14 @@ const App: React.FC = () => {
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col h-full relative">
-         
-         {/* HEADER */}
          <header className="h-16 bg-white dark:bg-[#1E293B] border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-8 z-10 transition-colors duration-300">
             <div>
                 <h2 className="text-xl font-bold text-slate-800 dark:text-white transition-colors">Lex publica IA <span className="text-slate-400 dark:text-slate-500 font-normal">by Coulibaly</span></h2>
             </div>
             <div className="flex items-center gap-4">
-                 {/* Bouton d'aide (Ampoule) */}
-                <button 
-                    onClick={() => setIsHelpOpen(true)}
-                    className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-all duration-200 cursor-pointer"
-                    title="Aide & Ressources"
-                >
+                <button onClick={() => setIsHelpOpen(true)} className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-all duration-200 cursor-pointer" title="Aide & Ressources">
                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
                 </button>
-
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold border border-green-100 dark:border-green-800">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                     Système prêt
@@ -253,11 +271,16 @@ const App: React.FC = () => {
             </div>
          </header>
 
-         {/* CONTENT CONTAINER */}
          <main className="flex-1 relative overflow-hidden bg-[#F8FAFC] dark:bg-[#0B1120] transition-colors duration-300">
-            {mode === ChatMode.TEXT ? <TextChat /> : <VoiceChat />}
+            {mode === ChatMode.TEXT ? (
+                <TextChat 
+                    messages={currentSession.messages} 
+                    onMessagesUpdate={updateCurrentSessionMessages}
+                />
+            ) : (
+                <VoiceChat />
+            )}
          </main>
-
       </div>
     </div>
   );
