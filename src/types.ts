@@ -12,12 +12,19 @@ export interface QuizQuestion {
   explanation: string;
 }
 
+export interface Attachment {
+  name: string;
+  mimeType: string;
+  data: string; // Base64
+}
+
 export interface Message {
   role: 'user' | 'model';
   text: string;
   timestamp: Date;
   isQuiz?: boolean; // Indique si le message contient un quiz structuré
   quizData?: QuizQuestion[]; // Données du quiz si applicable
+  attachment?: Attachment; // Fichier joint optionnel
 }
 
 export interface ChatSession {
