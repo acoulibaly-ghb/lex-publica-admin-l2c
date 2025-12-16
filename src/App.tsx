@@ -235,7 +235,7 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-800/50 w-full">
+            {/*  <div className="pt-4 border-t border-slate-800/50 w-full">
                 <h3 className="px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Espace Professeur</h3>
                 <nav className="space-y-1">
                     <button className="w-full flex items-center justify-start gap-3 px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-800 hover:text-white transition-colors opacity-70 cursor-not-allowed text-slate-400" title="Gérer le Cours">
@@ -243,7 +243,7 @@ const App: React.FC = () => {
                         <span>Gérer le Cours</span>
                     </button>
                 </nav>
-            </div>
+            </div> */}
         </div>
 
         {/* Sidebar Footer */}
