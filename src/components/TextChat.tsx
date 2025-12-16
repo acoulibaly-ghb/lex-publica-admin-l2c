@@ -102,10 +102,10 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
   // --- ACTIONS RAPIDES (PILLS) ---
   const quickActions = [
     { label: "Explication", prompt: "Explique-moi de manière pédagogique la notion suivante : ", color: "bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/40", icon: "💡" },
-    { label: "Quiz Rapide", prompt: "Pose-moi une question rapide pour tester mes connaissances.", color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40", icon: "❓" },
-    { label: "Générer QCM", prompt: "Génère un QCM de 3 questions sur ce thème.", color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/40", icon: "✅" },
-    { label: "Cas Pratique", prompt: "Soumets-moi un petit cas pratique juridique.", color: "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/40", icon: "📖" },
-    { label: "Vrai/Faux", prompt: "Propose-moi une affirmation Vrai/Faux sur le cours.", color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40", icon: "⚖️" }
+    { label: "Quiz Rapide", prompt: "Pose-moi une question rapide sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40", icon: "❓" },
+    { label: "Générer QCM", prompt: "Génère un QCM de 3 questions sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/40", icon: "✅" },
+    { label: "Cas Pratique", prompt: "Soumets-moi un petit cas pratique sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/40", icon: "📖" },
+    { label: "Vrai/Faux", prompt: "Propose-moi une affirmation Vrai/Faux sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40", icon: "⚖️" }
   ];
 
   const sendMessage = async (text: string) => {
