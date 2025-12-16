@@ -8,7 +8,7 @@ import HelpModal from './components/HelpModal';
 // Message d'accueil par défaut
 const WELCOME_MESSAGE: Message = { 
     role: 'model', 
-    text: 'Bonjour ! Je suis **Ada**, l\'IA Lex Publica. Comment puis-je vous aider sur le cours de Droit administratif aujourd\'hui ?', 
+    text: 'Bonjour ! Je suis **Ada**, l\'IA Lex publica. Comment puis-je vous aider sur le cours de Droit administratif ?', 
     timestamp: new Date() 
 };
 
