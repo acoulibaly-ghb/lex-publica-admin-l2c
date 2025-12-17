@@ -361,7 +361,7 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Posez une question ou envoyez un PDF..." 
                 rows={1}
-                className="flex-1 bg-transparent border-0 py-3.5 px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 text-base resize-none max-h-[200px] overflow-y-auto custom-scrollbar"
+                className="flex-1 bg-transparent border-2 py-3.5 px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 text-base resize-none max-h-[200px] overflow-y-auto custom-scrollbar"
                 autoFocus
             />
             <button 
