@@ -102,15 +102,15 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const API_KEY = import.meta.env.VITE_API_KEY;
+  const API_KEY = process.env.API_KEY;
 
   // --- ACTIONS RAPIDES (PILLS) ---
   const quickActions = [
     { label: "Explication", prompt: "Explique-moi simplement la notion suivante : ", color: "bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/40", icon: "💡" },
-    { label: "Quiz Rapide", prompt: "Pose-moi une question rapide sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40", icon: "❓" },
-    { label: "Générer QCM", prompt: "Génère un QCM de 3 questions sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/40", icon: "✅" },
-    { label: "Cas Pratique", prompt: "Soumets-moi un petit cas pratique sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/40", icon: "📖" },
-    { label: "Vrai/Faux", prompt: "Propose-moi une affirmation Vrai/Faux sur un ou plusieurs thèmes du cours que je vais t'indiquer.", color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40", icon: "⚖️" }
+    { label: "Quiz Rapide", prompt: "Pose-moi une question rapide pour tester mes connaissances.", color: "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40", icon: "❓" },
+    { label: "Générer QCM", prompt: "Génère un QCM de 3 questions sur ce thème au format JSON.", color: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/40", icon: "✅" },
+    { label: "Cas Pratique", prompt: "Soumets-moi un petit cas pratique juridique.", color: "bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/40", icon: "📖" },
+    { label: "Vrai/Faux", prompt: "Propose-moi une affirmation Vrai/Faux sur le cours.", color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/40", icon: "⚖️" }
   ];
 
   // Auto-resize textarea
@@ -335,8 +335,8 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
              </div>
         )}
 
-        {/* Search Bar */}
-        <div className="bg-white dark:bg-[#1E293B] rounded-2xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-200 dark:border-slate-700 p-1.5 flex items-end gap-2 transition-colors">
+        {/* Search Bar - UPDATED STYLING */}
+        <div className="bg-white dark:bg-[#1E293B] rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 border border-slate-200 dark:border-slate-700 p-2 flex items-end gap-2 transition-all duration-300 focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-500/10">
             
             {/* File Upload Button */}
             <input 
@@ -348,7 +348,7 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
             />
             <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors mb-1"
+                className="p-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-2xl transition-colors mb-0.5"
                 title="Joindre un PDF"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
@@ -361,13 +361,13 @@ const TextChat: React.FC<TextChatProps> = ({ messages, onMessagesUpdate }) => {
                 onKeyDown={handleKeyDown}
                 placeholder="Posez une question ou envoyez un PDF..." 
                 rows={1}
-                className="flex-1 bg-transparent border-0 py-3 px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 text-base resize-none max-h-[200px] overflow-y-auto custom-scrollbar"
+                className="flex-1 bg-transparent border-0 py-3.5 px-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-0 text-base resize-none max-h-[200px] overflow-y-auto custom-scrollbar"
                 autoFocus
             />
             <button 
                 onClick={() => sendMessage(input)}
                 disabled={(!input.trim() && !selectedFile) || isLoading}
-                className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 mb-1"
+                className="p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl transition-colors disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 mb-0.5"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
             </button>
